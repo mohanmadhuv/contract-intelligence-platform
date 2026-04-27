@@ -12,9 +12,8 @@ services:
       - key: PYTHON_VERSION
         value: "3.11.0"
 
-  - type: web
+  - type: static
     name: contract-intelligence-ui
-    env: static
     repo: https://github.com/likhit99/contract-intelligence
     rootDir: frontend
     buildCommand: npm install && npm run build
