@@ -10,6 +10,7 @@ from queries import (
     get_amendments, get_concentration, get_less_for_more,
     get_topline_trend, get_category_summaries,
     get_contracts_table, get_department_spend, get_watchlist,
+    get_category_year_rows, get_vendor_shares, get_geography,
 )
 
 app = FastAPI(title="Contract Intelligence API", version="2.0.0")
@@ -73,6 +74,18 @@ def topline_trend():
 @app.get("/api/category-summaries")
 def category_summaries(year_from: int = Query(YF), year_to: int = Query(YT)):
     return get_category_summaries(year_from, year_to)
+
+@app.get("/api/category-year-rows")
+def category_year_rows(code: str = Query(...), year_from: int = Query(YF), year_to: int = Query(YT)):
+    return get_category_year_rows(code, year_from, year_to)
+
+@app.get("/api/vendor-shares")
+def vendor_shares(code: str = Query(...), year_from: int = Query(YF), year_to: int = Query(YT)):
+    return get_vendor_shares(code, year_from, year_to)
+
+@app.get("/api/geography")
+def geography(year_from: int = Query(YF), year_to: int = Query(YT)):
+    return get_geography(year_from, year_to)
 
 
 @app.get("/api/contracts")

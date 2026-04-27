@@ -8,8 +8,10 @@ export default function CategoryView({ initialCode, onJumpTo }) {
   useEffect(() => { if (initialCode) setCode(initialCode) }, [initialCode])
   useEffect(() => { if (cats && !code) setCode(cats[0]?.code) }, [cats, code])
 
-  // Use economic_object_code for spend-trend by passing as eoc param
-  const { data: yearRows } = useApi(code ? `/api/spend-trend?year_from=2015&year_to=2025` : null)
+  const { data: yearRows } = useApi(code ? `/api/category-year-rows?code=${code}&year_from=2015&year_to=2025` : null)
+  const { data: vendorShares } = useApi(code ? `/api/vendor-shares?code=${code}` : null)
+  // We still fetch overall concentration for the HHI trend card since that's a macro view, or we can just hide it if not needed.
+  // Actually, let's keep the macro HHI trend at the bottom to show how the category compares to the whole, but the top vendors are category specific.
   const { data: concentration } = useApi(`/api/concentration`)
 
   if (!cats || !code) return <div style={{padding:40,color:'var(--text-tertiary)'}}>Loading…</div>
@@ -41,14 +43,14 @@ export default function CategoryView({ initialCode, onJumpTo }) {
       </div>
 
       <div className="grid-2">
-        {/* Year-by-year table — uses topline trend since we can't filter by EOC via spend-trend */}
+        {/* Year-by-year table */}
         <div className="card">
-          <div className="card-head"><div><div className="card-title">Year-by-year (all categories)</div><div className="card-sub">Spend, contracts, average value</div></div></div>
+          <div className="card-head"><div><div className="card-title">Year-by-year</div><div className="card-sub">Spend, contracts, average value for EOC {code}</div></div></div>
           <div className="card-body" style={{padding:0}}>
             {yearRows && yearRows.length > 0 ? (
-              <table className="tbl"><thead><tr><th>Year</th><th className="num">Spend</th><th className="num">Contracts</th><th className="num">Avg value</th><th className="num">YoY</th></tr></thead>
+              <table className="tbl"><thead><tr><th>Year</th><th className="num">Spend</th><th className="num">Contracts</th><th className="num">Avg value</th></tr></thead>
                 <tbody>{yearRows.map(r=>(
-                  <tr key={r.year}><td>FY{String(r.year).slice(2)}</td><td className="num">{fmtCAD(r.spend)}</td><td className="num">{fmtNum(r.contracts)}</td><td className="num">{fmtCAD(r.avg_value)}</td><td className="num">{r.yoy_growth_pct!=null?`${r.yoy_growth_pct>0?'+':''}${r.yoy_growth_pct}%`:'—'}</td></tr>
+                  <tr key={r.year}><td>FY{String(r.year).slice(2)}</td><td className="num">{fmtCAD(r.spend)}</td><td className="num">{fmtNum(r.contracts)}</td><td className="num">{fmtCAD(r.avg_value)}</td></tr>
                 ))}</tbody>
               </table>
             ) : <div style={{padding:20,color:'var(--text-tertiary)'}}>Loading year data…</div>}
@@ -57,9 +59,9 @@ export default function CategoryView({ initialCode, onJumpTo }) {
 
         {/* Vendor concentration */}
         <div className="card">
-          <div className="card-head"><div><div className="card-title">Top vendors (all categories)</div><div className="card-sub">By market share</div></div></div>
+          <div className="card-head"><div><div className="card-title">Top vendors</div><div className="card-sub">By market share for EOC {code}</div></div></div>
           <div className="card-body" style={{padding:'10px 18px'}}>
-            {concentration?.top_vendors ? concentration.top_vendors.slice(0,8).map((v,i) => (
+            {vendorShares ? vendorShares.map((v,i) => (
               <div key={v.vendor_name} className="bar-row">
                 <div className="bar-label">{v.vendor_name}</div>
                 <div className="bar-track"><div className="bar-fill" style={{width:`${Math.min(v.market_share_pct,100)}%`,background:['var(--viz-1)','var(--viz-2)','var(--viz-3)','var(--viz-4)','var(--viz-5)'][i%5]}}/></div>

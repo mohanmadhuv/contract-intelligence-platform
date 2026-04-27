@@ -206,3 +206,40 @@ def get_watchlist(y0=2015,y1=2025):
         ROUND((contract_value::numeric/original_value::numeric)::numeric,3) AS amendment_ratio
         FROM {TABLE} WHERE {_yf(y0,y1)} AND original_value IS NOT NULL AND original_value!='' AND original_value::numeric>0 AND contract_value::numeric/original_value::numeric>1.15
         ORDER BY contract_value::numeric/original_value::numeric DESC LIMIT 30""")
+
+def get_category_year_rows(eoc, y0=2015, y1=2025):
+    return query(f"""SELECT EXTRACT(YEAR FROM contract_date::date)::int AS year,
+        ROUND(SUM(contract_value::numeric)::numeric,0) AS spend, COUNT(*) AS contracts,
+        ROUND(AVG(contract_value::numeric)::numeric,0) AS avg_value
+        FROM {TABLE} WHERE {_yf(y0,y1)} AND TRIM(economic_object_code)='{eoc}'
+        GROUP BY 1 ORDER BY 1""")
+
+def get_vendor_shares(eoc, y0=2015, y1=2025):
+    return query(f"""WITH total AS (SELECT SUM(contract_value::numeric) AS t FROM {TABLE} WHERE {_yf(y0,y1)} AND TRIM(economic_object_code)='{eoc}')
+        SELECT vendor_name, ROUND(SUM(contract_value::numeric)::numeric,0) AS spend,
+        ROUND((SUM(contract_value::numeric)/(SELECT t FROM total)*100)::numeric,1) AS market_share_pct
+        FROM {TABLE} WHERE {_yf(y0,y1)} AND TRIM(economic_object_code)='{eoc}'
+        GROUP BY 1 ORDER BY spend DESC LIMIT 10""")
+
+def get_geography(y0=2015, y1=2025):
+    return query(f"""WITH provs AS (
+        SELECT CASE 
+            WHEN UPPER(SUBSTRING(TRIM(vendor_postal_code) FROM 1 FOR 1)) = 'A' THEN 'NL'
+            WHEN UPPER(SUBSTRING(TRIM(vendor_postal_code) FROM 1 FOR 1)) = 'B' THEN 'NS'
+            WHEN UPPER(SUBSTRING(TRIM(vendor_postal_code) FROM 1 FOR 1)) = 'C' THEN 'PE'
+            WHEN UPPER(SUBSTRING(TRIM(vendor_postal_code) FROM 1 FOR 1)) = 'E' THEN 'NB'
+            WHEN UPPER(SUBSTRING(TRIM(vendor_postal_code) FROM 1 FOR 1)) IN ('G','H','J') THEN 'QC'
+            WHEN UPPER(SUBSTRING(TRIM(vendor_postal_code) FROM 1 FOR 1)) IN ('K','L','M','N','P') THEN 'ON'
+            WHEN UPPER(SUBSTRING(TRIM(vendor_postal_code) FROM 1 FOR 1)) = 'R' THEN 'MB'
+            WHEN UPPER(SUBSTRING(TRIM(vendor_postal_code) FROM 1 FOR 1)) = 'S' THEN 'SK'
+            WHEN UPPER(SUBSTRING(TRIM(vendor_postal_code) FROM 1 FOR 1)) = 'T' THEN 'AB'
+            WHEN UPPER(SUBSTRING(TRIM(vendor_postal_code) FROM 1 FOR 1)) = 'V' THEN 'BC'
+            WHEN UPPER(SUBSTRING(TRIM(vendor_postal_code) FROM 1 FOR 1)) = 'X' THEN 'NT'
+            WHEN UPPER(SUBSTRING(TRIM(vendor_postal_code) FROM 1 FOR 1)) = 'Y' THEN 'YT'
+            ELSE NULL END AS prov,
+        contract_value::numeric AS val
+        FROM {TABLE} WHERE {_yf(y0,y1)} AND vendor_postal_code IS NOT NULL AND vendor_postal_code != ''
+        )
+        SELECT prov, ROUND(SUM(val)::numeric,0) AS spend, COUNT(*) AS contracts
+        FROM provs WHERE prov IS NOT NULL GROUP BY 1 ORDER BY spend DESC
+    """)
