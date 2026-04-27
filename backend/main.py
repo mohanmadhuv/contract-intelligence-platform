@@ -1,6 +1,9 @@
-"""Contract Intelligence API — FastAPI backend"""
-from fastapi import FastAPI, Query
+import os
+from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
 from queries import (
     get_overview, get_what_is_bought, get_spend_trend,
     get_growth_ranking, get_volume, get_unit_cost,
@@ -10,54 +13,62 @@ from queries import (
 )
 
 app = FastAPI(title="Contract Intelligence API", version="2.0.0")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-YF, YT = 2015, 2025
 
-@app.get("/")
-def root():
-    return {"status": "ok", "message": "Contract Intelligence API v2"}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# ── Original endpoints ──
+# Constants for default fiscal year range
+YF = 2015
+YT = 2025
+
 @app.get("/api/overview")
-def overview(year_from: int = Query(YF), year_to: int = Query(YT)):
-    return get_overview(year_from, year_to)
+def overview():
+    return get_overview()
 
 @app.get("/api/what-is-bought")
 def what_is_bought(year_from: int = Query(YF), year_to: int = Query(YT)):
     return get_what_is_bought(year_from, year_to)
 
 @app.get("/api/spend-trend")
-def spend_trend(year_from: int = Query(YF), year_to: int = Query(YT), category: str = Query(None)):
-    return get_spend_trend(year_from, year_to, category)
+def spend_trend(
+    commodity_type: str = Query(None),
+    year_from: int = Query(YF),
+    year_to: int = Query(YT)
+):
+    return get_spend_trend(commodity_type, year_from, year_to)
 
 @app.get("/api/growth-ranking")
 def growth_ranking(year_from: int = Query(YF), year_to: int = Query(YT)):
     return get_growth_ranking(year_from, year_to)
 
 @app.get("/api/volume")
-def volume(year_from: int = Query(YF), year_to: int = Query(YT), category: str = Query(None)):
-    return get_volume(year_from, year_to, category)
+def volume(year_from: int = Query(YF), year_to: int = Query(YT)):
+    return get_volume(year_from, year_to)
 
 @app.get("/api/unit-cost")
-def unit_cost(year_from: int = Query(YF), year_to: int = Query(YT), category: str = Query(None)):
-    return get_unit_cost(year_from, year_to, category)
+def unit_cost(year_from: int = Query(YF), year_to: int = Query(YT)):
+    return get_unit_cost(year_from, year_to)
 
 @app.get("/api/amendments")
-def amendments(year_from: int = Query(YF), year_to: int = Query(YT), category: str = Query(None)):
-    return get_amendments(year_from, year_to, category)
+def amendments():
+    return get_amendments()
 
 @app.get("/api/concentration")
-def concentration(year_from: int = Query(YF), year_to: int = Query(YT), category: str = Query(None)):
-    return get_concentration(year_from, year_to, category)
+def concentration(commodity_type: str = Query(None)):
+    return get_concentration(commodity_type)
 
 @app.get("/api/less-for-more")
-def less_for_more(year_from: int = Query(YF), year_to: int = Query(YT)):
-    return get_less_for_more(year_from, year_to)
+def less_for_more():
+    return get_less_for_more()
 
-# ── New dashboard endpoints ──
 @app.get("/api/topline-trend")
-def topline_trend(year_from: int = Query(YF), year_to: int = Query(YT)):
-    return get_topline_trend(year_from, year_to)
+def topline_trend():
+    return get_topline_trend()
 
 @app.get("/api/category-summaries")
 def category_summaries(year_from: int = Query(YF), year_to: int = Query(YT)):
@@ -76,6 +87,20 @@ def departments(year_from: int = Query(YF), year_to: int = Query(YT)):
 @app.get("/api/watchlist")
 def watchlist():
     return get_watchlist()
+
+# Serve Frontend Static Files
+frontend_dist = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+if os.path.isdir(frontend_dist):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="API route not found")
+        index_path = os.path.join(frontend_dist, "index.html")
+        if os.path.isfile(index_path):
+            return FileResponse(index_path)
+        raise HTTPException(status_code=404, detail="Frontend not built")
 
 if __name__ == "__main__":
     import uvicorn
