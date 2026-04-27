@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Root package.json to trick Render's Node environment into building both frontend and backend",
   "scripts": {
-    "postinstall": "cd frontend && npm install && npm run build && cd ../backend && pip3 install -r requirements.txt --break-system-packages",
-    "start": "cd backend && python3 -m uvicorn main:app --host 0.0.0.0 --port $PORT"
+    "postinstall": "cd frontend && npm install && npm run build && cd ../backend && python3 -m pip install -r requirements.txt --target ./pypackages --break-system-packages",
+    "start": "cd backend && PYTHONPATH=./pypackages python3 -m uvicorn main:app --host 0.0.0.0 --port $PORT"
   }
 }
