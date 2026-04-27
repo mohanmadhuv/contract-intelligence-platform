@@ -61,7 +61,7 @@ def amendments():
 
 @app.get("/api/concentration")
 def concentration(commodity_type: str = Query(None)):
-    return get_concentration(commodity_type)
+    return get_concentration(category=commodity_type)
 
 @app.get("/api/less-for-more")
 def less_for_more():
