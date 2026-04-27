@@ -8,10 +8,10 @@ export default function OverviewView({ onJumpTo }) {
   const { data: cats } = useApi('/api/category-summaries')
   const { data: lfm } = useApi('/api/less-for-more')
 
-  if (!overview || !trend || !cats) return <div style={{padding:40,color:'var(--text-tertiary)'}}>Loading overview…</div>
-
   const worst = cats && cats.length > 0 ? cats[0] : null
   const { data: worstTrend } = useApi(worst ? `/api/category-year-rows?code=${worst.code}&year_from=2015&year_to=2025` : null)
+
+  if (!overview || !trend || !cats) return <div style={{padding:40,color:'var(--text-tertiary)'}}>Loading overview…</div>
 
   const latest = trend[trend.length-1]
   const first = trend[0]
