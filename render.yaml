@@ -2,7 +2,7 @@ services:
   - type: web
     name: contract-intelligence-api
     env: python
-    repo: https://github.com/yourusername/contract-intelligence
+    repo: https://github.com/likhit99/contract-intelligence
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
@@ -15,7 +15,7 @@ services:
   - type: web
     name: contract-intelligence-ui
     env: static
-    repo: https://github.com/yourusername/contract-intelligence
+    repo: https://github.com/likhit99/contract-intelligence
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
