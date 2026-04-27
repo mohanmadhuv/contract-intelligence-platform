@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fmtCAD, fmtNum, fmtSignedPct, fmtPct, Icon, CountUp, Sparkline, useApi } from '../components'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 export default function OverviewView({ onJumpTo }) {
   const { data: overview } = useApi('/api/overview')
@@ -10,7 +10,9 @@ export default function OverviewView({ onJumpTo }) {
 
   if (!overview || !trend || !cats) return <div style={{padding:40,color:'var(--text-tertiary)'}}>Loading overview…</div>
 
-  const worst = cats[0]
+  const worst = cats && cats.length > 0 ? cats[0] : null
+  const { data: worstTrend } = useApi(worst ? `/api/category-year-rows?code=${worst.code}&year_from=2015&year_to=2025` : null)
+
   const latest = trend[trend.length-1]
   const first = trend[0]
   const cagrTotal = Math.pow(latest.total_spend/first.total_spend, 1/(trend.length-1))-1
@@ -18,6 +20,7 @@ export default function OverviewView({ onJumpTo }) {
   const cagrUnit = Math.pow(latest.avg_contract_value/first.avg_contract_value, 1/(trend.length-1))-1
 
   const chartData = trend.map(r => ({ label: `FY${String(r.fiscal_year).slice(2)}`, value: r.total_spend }))
+  const worstChartData = worstTrend ? worstTrend.map(r => ({ label: `FY${String(r.year).slice(2)}`, value: r.spend })) : []
   const top6 = cats.slice(0,6)
   const maxConcern = Math.max(...top6.map(c=>c.concern_score))
 
@@ -50,8 +53,15 @@ export default function OverviewView({ onJumpTo }) {
           <div style={{display:'flex',flexDirection:'column',justifyContent:'center'}}>
             <div className="card" style={{padding:16}}>
               <div style={{fontSize:11.5,color:'var(--text-tertiary)',textTransform:'uppercase',letterSpacing:'0.04em',fontWeight:600}}>Spend trajectory</div>
-              <div style={{marginTop:8}}>
-                <Sparkline data={chartData} accent="var(--critical)" height={70} showDots/>
+              <div style={{marginTop:8, height: 70, width: '100%'}}>
+                {worstChartData.length > 0 ? (
+                  <ResponsiveContainer>
+                    <LineChart data={worstChartData}>
+                      <Tooltip formatter={v=>[fmtCAD(v),'Spend']} contentStyle={{background:'var(--bg-elevated)',border:'1px solid var(--hairline)',borderRadius:10}} cursor={{stroke: 'var(--hairline-strong)', strokeWidth: 1, strokeDasharray: '2 2'}} />
+                      <Line type="monotone" dataKey="value" stroke="var(--critical)" strokeWidth={2} dot={{r: 2, fill: 'var(--critical)'}} activeDot={{r: 4}} isAnimationActive={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : <div style={{color:'var(--text-tertiary)'}}>Loading...</div>}
               </div>
             </div>
           </div>
