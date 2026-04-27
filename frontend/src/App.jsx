@@ -90,7 +90,14 @@ export default function App() {
             <div className="crumb"><span>Procurement</span><span>/</span><b>{activeLabel}</b></div>
           </div>
           <div className="topbar-right">
-            <span className="connection-pill"><span className="connection-dot"/>Connected · CKAN datastore</span>
+            <div className="tooltip-wrap">
+              <span className="connection-pill" style={{cursor: 'help'}}><span className="connection-dot"/>Connected · CKAN datastore</span>
+              <div className="tooltip">
+                <a href="https://open.canada.ca/data/en/dataset/fac950c0-00df-4bb6-a947-657754d92039" target="_blank" rel="noreferrer">
+                  Open dataset on open.canada.ca ↗
+                </a>
+              </div>
+            </div>
             <span className="connection-pill">Synced {new Date().toISOString().slice(0,10)}</span>
           </div>
         </div>

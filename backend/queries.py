@@ -100,10 +100,18 @@ def get_concentration(y0=2015,y1=2025,category=None):
         SELECT vendor_name, COUNT(*) AS contracts, ROUND(SUM(contract_value::numeric)::numeric,0) AS spend,
         ROUND(SUM(contract_value::numeric)/MAX(gt)*100::numeric,2) AS market_share_pct
         FROM {TABLE}, t WHERE {_yf(y0,y1)} {cat} GROUP BY vendor_name ORDER BY spend DESC LIMIT 15""")
-    hhi_trend=query(f"""WITH sh AS (SELECT EXTRACT(YEAR FROM contract_date::date)::int AS year, vendor_name,
-        SUM(contract_value::numeric)/SUM(SUM(contract_value::numeric)) OVER(PARTITION BY EXTRACT(YEAR FROM contract_date::date)) AS share
-        FROM {TABLE} WHERE {_yf(y0,y1)} {cat} GROUP BY 1,2)
-        SELECT year, ROUND(SUM(POWER(share,2))::numeric,4) AS hhi, COUNT(DISTINCT vendor_name) AS vendor_count FROM sh GROUP BY year ORDER BY year""")
+    hhi_trend=query(f"""WITH yearly_vendor_spend AS (
+        SELECT EXTRACT(YEAR FROM contract_date::date)::int AS year, vendor_name,
+        SUM(contract_value::numeric) AS spend
+        FROM {TABLE} WHERE {_yf(y0,y1)} {cat} GROUP BY 1, 2
+        ),
+        sh AS (
+        SELECT year, vendor_name,
+        spend / NULLIF(SUM(spend) OVER(PARTITION BY year),0) AS share
+        FROM yearly_vendor_spend
+        )
+        SELECT year, ROUND(SUM(POWER(share,2))::numeric,4) AS hhi, COUNT(DISTINCT vendor_name) AS vendor_count 
+        FROM sh GROUP BY year ORDER BY year""")
     return {"top_vendors":top_vendors,"hhi_trend":hhi_trend}
 
 # ── Less for more ──
