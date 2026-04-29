@@ -10,6 +10,7 @@ function ChatInterface() {
   const [error, setError] = useState(null);
   const [showTools, setShowTools] = useState(false);
   const messagesEndRef = useRef(null);
+  const conversationHistoryRef = useRef([]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -43,19 +44,18 @@ function ChatInterface() {
     setLoading(true);
 
     try {
-      const conversationHistory = messages
-        .filter((m) => m.role === 'user' || m.role === 'assistant')
-        .map((m) => ({
-          role: m.role,
-          content: m.content,
-        }));
-
       const response = await axios.post('http://localhost:3001/chat', {
         message: userMessage,
-        conversationHistory,
+        conversationHistory: conversationHistoryRef.current,
       });
 
-      const { message, insights, suggestedActions, dataReferences, visualization } = response.data;
+      const { message, dataReferences } = response.data;
+
+      conversationHistoryRef.current = [
+        ...conversationHistoryRef.current,
+        { role: 'user', content: userMessage },
+        { role: 'assistant', content: message },
+      ];
 
       setMessages((prev) => [
         ...prev,
@@ -63,10 +63,7 @@ function ChatInterface() {
           id: Date.now() + 1,
           role: 'assistant',
           content: message,
-          insights,
-          suggestedActions,
           dataReferences,
-          visualization,
           timestamp: new Date(),
         },
       ]);
@@ -87,9 +84,9 @@ function ChatInterface() {
             <h2>Contract Intelligence</h2>
             <p>Ask me about government contract spending</p>
             <div className="example-queries">
-              <button className="example-btn">Show me rising costs</button>
-              <button className="example-btn">Who dominates consulting?</button>
-              <button className="example-btn">Are rates competitive?</button>
+              <button className="example-btn" onClick={() => setInputValue('Show me rising costs')}>Show me rising costs</button>
+              <button className="example-btn" onClick={() => setInputValue('Who dominates consulting?')}>Who dominates consulting?</button>
+              <button className="example-btn" onClick={() => setInputValue('Are rates competitive?')}>Are rates competitive?</button>
             </div>
           </div>
         )}

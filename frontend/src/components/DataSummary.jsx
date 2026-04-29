@@ -19,6 +19,7 @@ function DataSummary({ data }) {
 
   return (
     <div className="data-summary">
+      <img src="/signature.svg" alt="Logo" className="sidebar-logo" />
       <div className="sidebar-section">
         <div className="section-header">ANALYSIS</div>
         <nav className="nav-menu">

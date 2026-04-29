@@ -1,0 +1,46 @@
+.narrative-bubble {
+  max-width: 75%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px 12px 12px 4px;
+  padding: 1rem 1.25rem;
+  color: #1f2937;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  word-break: break-word;
+  font-family: 'Lato', sans-serif;
+}
+
+.narrative-bubble p {
+  margin: 0 0 0.75rem 0;
+}
+
+.narrative-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.narrative-bubble strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+.narrative-bubble ul,
+.narrative-bubble ol {
+  margin: 0.5rem 0 0.75rem 1.25rem;
+  padding: 0;
+}
+
+.narrative-bubble li {
+  margin-bottom: 0.3rem;
+}
+
+.narrative-bubble--empty {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .narrative-bubble {
+    max-width: 90%;
+  }
+}

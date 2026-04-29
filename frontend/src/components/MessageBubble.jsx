@@ -1,5 +1,5 @@
 import React from 'react';
-import ResponseCard from './ResponseCard';
+import NarrativeBubble from './NarrativeBubble';
 import './MessageBubble.css';
 
 function MessageBubble({ message }) {
@@ -8,7 +8,7 @@ function MessageBubble({ message }) {
   return (
     <div className={`message-wrapper ${message.role}`}>
       {isAssistant ? (
-        <ResponseCard response={message} />
+        <NarrativeBubble content={message.content} />
       ) : (
         <div className="message-bubble">{message.content}</div>
       )}
