@@ -14,7 +14,7 @@ TABLE_ID = "contracts"
 FULL_TABLE = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
 
 CKAN_BASE = "https://open.canada.ca/data/en/api/3/action/datastore_search"
-RESOURCE_ID = "fac950c0-00df-4bb6-a947-657754d92039"
+RESOURCE_ID = "fac950c0-00d5-4ec1-a4d3-9cbebf98a305"
 BATCH_SIZE = 5000
 
 # BigQuery schema — typed columns instead of all-TEXT
