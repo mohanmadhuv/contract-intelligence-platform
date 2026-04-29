@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Lato', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #ffffff;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  height: 100vh;
+  overflow: hidden;
+  background: #fafafa;
+}
+
+.global-sidebar {
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.global-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.global-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.global-sidebar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.global-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fafafa;
+}
+
+@media (max-width: 768px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .global-sidebar {
+    display: none;
+  }
+}
