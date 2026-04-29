@@ -1,35 +1,37 @@
 """
 Database abstraction for Contract Intelligence.
-Uses Google BigQuery via Application Default Credentials (ADC).
+Uses PostgreSQL for Render deployment.
 """
 import os
-from google.cloud import bigquery
+import psycopg2
+import psycopg2.extras
+from urllib.parse import urlparse
 
-PROJECT_ID = os.getenv("GCP_PROJECT_ID", "agency2026ot-v-sync-0429")
-DATASET_ID = os.getenv("BQ_DATASET", "contract_intelligence")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Singleton client
-_client = None
+# Singleton connection
+_conn = None
 
-def get_client():
-    global _client
-    if _client is None:
-        _client = bigquery.Client(project=PROJECT_ID)
-    return _client
+def get_connection():
+    global _conn
+    if _conn is None or _conn.closed:
+        _conn = psycopg2.connect(DATABASE_URL)
+    return _conn
 
 
 def query(sql: str, params=None):
-    """Execute a BigQuery SQL query and return list of dicts."""
-    client = get_client()
-    job_config = bigquery.QueryJobConfig()
-    if params:
-        job_config.query_parameters = params
-
-    result = client.query(sql, job_config=job_config)
-    rows = []
-    for row in result:
-        rows.append(dict(row))
-    return rows
+    """Execute a PostgreSQL query and return list of dicts."""
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute(sql, params)
+        rows = cur.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
 
 
 def scalar(sql: str, params=None):
@@ -41,5 +43,5 @@ def scalar(sql: str, params=None):
 
 
 def table_ref():
-    """Return fully qualified table reference."""
-    return f"`{PROJECT_ID}.{DATASET_ID}.contracts`"
+    """Return table reference."""
+    return "contracts"

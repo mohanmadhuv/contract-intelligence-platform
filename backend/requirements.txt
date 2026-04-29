@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-google-cloud-bigquery
-google-cloud-aiplatform
-vertexai
+psycopg2-binary
 pydantic
+requests
+boto3
