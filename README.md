@@ -2,38 +2,47 @@
 
 Claude-powered chat interface for analyzing Canadian federal government contract spending data. Built for the Agency 2026 Hackathon.
 
-## Quick Start
+## Quick Start (30 seconds)
 
 ### Prerequisites
-- Node.js 18+
-- npm or yarn
-- ANTHROPIC_API_KEY from Anthropic
+- Node.js 18+ (verify with `node --version`)
+- npm (comes with Node.js)
+- ANTHROPIC_API_KEY from [console.anthropic.com](https://console.anthropic.com)
 
-### Backend Setup
+### Run Everything
 
+**Option 1: Automated (Recommended)**
 ```bash
-cd backend
-npm install
+cd /Users/mohanmadhuv/Documents/v-sync
 
-# Create .env file
-cp .env.example .env
-# Edit .env and add your ANTHROPIC_API_KEY
+# Set your API key first
+export ANTHROPIC_API_KEY=sk-ant-your-key-here
 
-# Start development server
+# Run both servers (in parallel)
+./start.sh
+```
+
+**Option 2: Manual (Two Terminals)**
+
+Terminal 1 - Backend:
+```bash
+cd /Users/mohanmadhuv/Documents/v-sync/backend
+export ANTHROPIC_API_KEY=sk-ant-your-key-here
 npm run dev
-# Server runs on http://localhost:3001
+# Should show: "Contract Intelligence API running on port 3001"
 ```
 
-### Frontend Setup
-
+Terminal 2 - Frontend:
 ```bash
-cd frontend
-npm install
-
-# Start development server
+cd /Users/mohanmadhuv/Documents/v-sync/frontend
 npm start
-# App opens on http://localhost:3000
+# Should open browser at http://localhost:3000
 ```
+
+### First Run
+1. Both servers should auto-start with sample data (no real API calls until you chat)
+2. Open [http://localhost:3000](http://localhost:3000)
+3. Try: "Show me rising costs" or "Who dominates consulting?"
 
 ## Architecture
 

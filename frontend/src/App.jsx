@@ -25,31 +25,13 @@ function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <div className="header-content">
-          <h1>Contract Intelligence</h1>
-          <p className="subtitle">Canadian Government Procurement Analysis</p>
-        </div>
-      </header>
+      <aside className="global-sidebar">
+        {!loading && dataSummary && <DataSummary data={dataSummary} />}
+      </aside>
 
       <main className="app-main">
-        <div className="app-container">
-          <aside className="sidebar">
-            {!loading && dataSummary && <DataSummary data={dataSummary} />}
-          </aside>
-
-          <section className="chat-section">
-            <ChatInterface />
-          </section>
-        </div>
+        <ChatInterface />
       </main>
-
-      <footer className="app-footer">
-        <p>
-          Data from Open Canada | Building accountability in government procurement |{' '}
-          <a href="https://open.canada.ca">Source</a>
-        </p>
-      </footer>
     </div>
   );
 }

@@ -8,6 +8,7 @@ function ChatInterface() {
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showTools, setShowTools] = useState(false);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -79,23 +80,17 @@ function ChatInterface() {
 
   return (
     <div className="chat-interface">
-      <div className="chat-header">
-        <h2>Chat with Claude</h2>
-        <p className="chat-subtitle">Ask questions about government contract spending</p>
-      </div>
-
       <div className="chat-messages">
         {messages.length === 0 && !loading && (
           <div className="chat-empty-state">
-            <div className="empty-state-icon">💬</div>
-            <h3>Welcome to Contract Intelligence</h3>
-            <p>Ask me about:</p>
-            <ul>
-              <li>Rising costs in specific categories</li>
-              <li>Which vendors are dominating markets</li>
-              <li>Whether contract rates are competitive</li>
-              <li>Why government spending is increasing</li>
-            </ul>
+            <div className="empty-state-logo">📊</div>
+            <h2>Contract Intelligence</h2>
+            <p>Ask me about government contract spending</p>
+            <div className="example-queries">
+              <button className="example-btn">Show me rising costs</button>
+              <button className="example-btn">Who dominates consulting?</button>
+              <button className="example-btn">Are rates competitive?</button>
+            </div>
           </div>
         )}
 
@@ -104,8 +99,8 @@ function ChatInterface() {
         ))}
 
         {loading && (
-          <div className="message-bubble assistant-message">
-            <div className="message-content">
+          <div className="message-wrapper assistant">
+            <div className="message-bubble">
               <div className="typing-indicator">
                 <span></span>
                 <span></span>
@@ -116,29 +111,61 @@ function ChatInterface() {
         )}
 
         {error && (
-          <div className="message-bubble error-message">
-            <div className="message-content">{error}</div>
+          <div className="message-wrapper error">
+            <div className="message-bubble">{error}</div>
           </div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
-      <form className="chat-input-form" onSubmit={handleSendMessage}>
-        <div className="input-wrapper">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Ask about contract spending, vendors, costs..."
-            disabled={loading}
-            className="chat-input"
-          />
-          <button type="submit" disabled={loading || !inputValue.trim()} className="send-button">
-            {loading ? '...' : '↑'}
-          </button>
-        </div>
-      </form>
+      <div className="chat-footer">
+        {showTools && (
+          <div className="chat-tools">
+            <div className="tools-section">
+              <div className="tool-group">
+                <button className="tool-btn" title="Filter data">🔍</button>
+                <button className="tool-btn" title="Upload file">📎</button>
+                <button className="tool-btn" title="Change mode">⚙️</button>
+              </div>
+              <button
+                className="tool-collapse"
+                onClick={() => setShowTools(false)}
+              >
+                ⌃
+              </button>
+            </div>
+          </div>
+        )}
+
+        <form className="chat-input-form" onSubmit={handleSendMessage}>
+          <div className="input-container">
+            <button
+              type="button"
+              className="tools-toggle"
+              onClick={() => setShowTools(!showTools)}
+              title="Tools & filters"
+            >
+              +
+            </button>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Ask about spending, vendors, costs..."
+              disabled={loading}
+              className="chat-input"
+            />
+            <button
+              type="submit"
+              disabled={loading || !inputValue.trim()}
+              className="send-btn"
+            >
+              ↑
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
