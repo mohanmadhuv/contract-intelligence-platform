@@ -30,6 +30,16 @@ YF = 2015
 YT = 2025
 
 
+# ── Health check ──
+@app.get("/")
+def root():
+    return {"status": "ok", "service": "Contract Intelligence API", "version": "3.0.0"}
+
+@app.get("/health")
+def health():
+    return {"status": "healthy", "database": "connected"}
+
+
 # ── Chat ──
 class ChatRequest(BaseModel):
     message: str
