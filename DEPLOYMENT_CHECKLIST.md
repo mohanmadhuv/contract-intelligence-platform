@@ -35,7 +35,7 @@
 #### Environment Variables Set:
 - [ ] `DATABASE_URL` = (Internal Database URL from Step 1)
 - [ ] `AWS_REGION` = `us-west-2`
-- [ ] `BEDROCK_API_KEY` = `ABSKQmVkcm9ja0FQSUtleS0yMmo5LWF0LTg2NjQ4MTE4MjYxNDowU2hQekc4SmNEQ25GTEdDWENGZUFpdmIrVFFpNGFDM3U4bytlcEgxVGFDU1pkT2QvSlhpWmdtS1U2dz0=`
+- [ ] `BEDROCK_API_KEY` = `<your-bedrock-api-key-from-aws>`
 
 - [ ] Service deployed successfully
 - [ ] Copied backend URL (e.g., `https://contract-intelligence-api.onrender.com`)

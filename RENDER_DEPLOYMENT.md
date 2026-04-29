@@ -55,7 +55,7 @@ This guide explains how to deploy the Contract Intelligence Platform on Render u
    |----------|-------|
    | `DATABASE_URL` | (Paste Internal Database URL from Step 1) |
    | `AWS_REGION` | `us-west-2` |
-   | `BEDROCK_API_KEY` | `ABSKQmVkcm9ja0FQSUtleS0yMmo5LWF0LTg2NjQ4MTE4MjYxNDowU2hQekc4SmNEQ25GTEdDWENGZUFpdmIrVFFpNGFDM3U4bytlcEgxVGFDU1pkT2QvSlhpWmdtS1U2dz0=` |
+   | `BEDROCK_API_KEY` | `<your-bedrock-api-key-from-aws>` |
 
 5. Click **Create Web Service**
 

@@ -114,7 +114,7 @@ WHERE CAST(contract_value AS FLOAT) > 0
 ```bash
 DATABASE_URL=postgresql://user:pass@host:5432/database
 AWS_REGION=us-west-2
-BEDROCK_API_KEY=ABSKQmVkcm9ja0FQSUtleS0yMmo5LWF0LTg2NjQ4MTE4MjYxNDowU2hQekc4SmNEQ25GTEdDWENGZUFpdmIrVFFpNGFDM3U4bytlcEgxVGFDU1pkT2QvSlhpWmdtS1U2dz0=
+BEDROCK_API_KEY=<your-bedrock-api-key-from-aws>
 ```
 
 **Frontend Static Site:**
