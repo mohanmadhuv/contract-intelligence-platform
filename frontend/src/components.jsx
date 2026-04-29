@@ -40,7 +40,8 @@ export function Icon({ name, size = 16 }) {
 export function useApi(path) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const API = import.meta.env.VITE_API_URL || 'https://contract-intelligence-platform-mm1o.onrender.com'
+  // Use backend URL directly - Vite env vars must be set at build time
+  const API = 'https://contract-intelligence-platform-mm1o.onrender.com'
   useEffect(() => {
     if (!path) { setLoading(false); return }
     setLoading(true)

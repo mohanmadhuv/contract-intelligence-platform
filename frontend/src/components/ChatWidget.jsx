@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { Icon } from '../components'
 
-const API = import.meta.env.VITE_API_URL || 'https://contract-intelligence-platform-mm1o.onrender.com'
+// Use backend URL directly - Vite env vars must be set at build time
+const API = 'https://contract-intelligence-platform-mm1o.onrender.com'
 
 const STARTERS = [
   "Which category has the highest amendment ratio?",
