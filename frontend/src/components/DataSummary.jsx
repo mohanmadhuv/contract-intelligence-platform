@@ -1,72 +1,54 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './DataSummary.css';
 
 function DataSummary({ data }) {
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-CA', {
-      style: 'currency',
-      currency: 'CAD',
-      notation: 'compact',
-      maximumFractionDigits: 1,
-    }).format(amount);
-  };
+  const [activeView, setActiveView] = useState('overview');
+
+  const analysisItems = [
+    { id: 'overview', label: 'Overview', icon: '◻️' },
+    { id: 'category', label: 'Category deep-dive', icon: '≡' },
+    { id: 'vendor', label: 'Vendor concentration', icon: '🌐' },
+    { id: 'contracts', label: 'Contracts', icon: '📋' },
+    { id: 'efficiency', label: 'Less for more', icon: '✨' },
+  ];
+
+  const exploreItems = [
+    { id: 'timeseries', label: 'Time-series', icon: '📈' },
+    { id: 'geography', label: 'Geography', icon: '🏛️' },
+  ];
 
   return (
     <div className="data-summary">
-      <h3>Dataset Overview</h3>
-
-      <div className="summary-card">
-        <div className="card-value">{formatCurrency(data.totalSpend2024)}</div>
-        <div className="card-label">2024 Spending</div>
+      <div className="sidebar-section">
+        <div className="section-header">ANALYSIS</div>
+        <nav className="nav-menu">
+          {analysisItems.map((item) => (
+            <button
+              key={item.id}
+              className={`nav-item ${activeView === item.id ? 'active' : ''}`}
+              onClick={() => setActiveView(item.id)}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              <span className="nav-label">{item.label}</span>
+            </button>
+          ))}
+        </nav>
       </div>
 
-      <div className="summary-card">
-        <div className="card-value">{data.categories}</div>
-        <div className="card-label">Categories</div>
-      </div>
-
-      <div className="summary-card">
-        <div className="card-value">{data.vendors}</div>
-        <div className="card-label">Major Vendors</div>
-      </div>
-
-      {data.highConcentrationCategories && data.highConcentrationCategories.length > 0 && (
-        <div className="alerts-section">
-          <h4>⚠️ High Concentration</h4>
-          <ul className="alerts-list">
-            {data.highConcentrationCategories.slice(0, 3).map((alert, idx) => (
-              <li key={idx}>
-                <strong>{alert.category}</strong>
-                <br />
-                {alert.topVendor}: {(alert.marketShare * 100).toFixed(0)}%
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {data.topAnomalies && data.topAnomalies.length > 0 && (
-        <div className="alerts-section">
-          <h4>🚩 Rate Anomalies</h4>
-          <ul className="alerts-list">
-            {data.topAnomalies.slice(0, 3).map((anomaly, idx) => (
-              <li key={idx}>
-                <strong>{anomaly.vendor}</strong>
-                <br />
-                {(anomaly.variance).toFixed(0)}% above market
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="quick-queries">
-        <h4>Try Asking</h4>
-        <div className="query-list">
-          <button className="query-btn">Show rising costs</button>
-          <button className="query-btn">Who dominates consulting?</button>
-          <button className="query-btn">Are rates competitive?</button>
-        </div>
+      <div className="sidebar-section">
+        <div className="section-header">EXPLORE</div>
+        <nav className="nav-menu">
+          {exploreItems.map((item) => (
+            <button
+              key={item.id}
+              className={`nav-item ${activeView === item.id ? 'active' : ''}`}
+              onClick={() => setActiveView(item.id)}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              <span className="nav-label">{item.label}</span>
+            </button>
+          ))}
+        </nav>
       </div>
     </div>
   );
