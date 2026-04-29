@@ -3,70 +3,74 @@ import axios from 'axios';
 import MessageBubble from './MessageBubble';
 import './ChatInterface.css';
 
-function ChatInterface() {
-  const [messages, setMessages] = useState([]);
+function titleFromMessage(msg) {
+  return msg.length > 46 ? msg.slice(0, 43) + '...' : msg;
+}
+
+function ChatInterface({ conversation, onUpdate }) {
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showTools, setShowTools] = useState(false);
   const messagesEndRef = useRef(null);
-  const conversationHistoryRef = useRef([]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const messages = conversation.messages;
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-
-    if (!inputValue.trim()) {
-      return;
-    }
+    if (!inputValue.trim()) return;
 
     const userMessage = inputValue.trim();
     setInputValue('');
     setError(null);
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        role: 'user',
-        content: userMessage,
-        timestamp: new Date(),
-      },
-    ]);
+    const userMsg = {
+      id: Date.now(),
+      role: 'user',
+      content: userMessage,
+      timestamp: new Date(),
+    };
+
+    const isFirstMessage = messages.length === 0;
+    const messagesWithUser = [...messages, userMsg];
+
+    onUpdate({
+      messages: messagesWithUser,
+      ...(isFirstMessage && { title: titleFromMessage(userMessage) }),
+    });
+
+    const conversationHistory = messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
 
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:3001/chat', {
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      const response = await axios.post(`${apiUrl}/chat`, {
         message: userMessage,
-        conversationHistory: conversationHistoryRef.current,
+        conversationHistory,
       });
 
       const { message, dataReferences } = response.data;
 
-      conversationHistoryRef.current = [
-        ...conversationHistoryRef.current,
-        { role: 'user', content: userMessage },
-        { role: 'assistant', content: message },
-      ];
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          role: 'assistant',
-          content: message,
-          dataReferences,
-          timestamp: new Date(),
-        },
-      ]);
+      onUpdate({
+        messages: [
+          ...messagesWithUser,
+          {
+            id: Date.now() + 1,
+            role: 'assistant',
+            content: message,
+            dataReferences,
+            timestamp: new Date(),
+          },
+        ],
+      });
     } catch (err) {
       setError('Failed to get response. Please try again.');
       console.error('Chat error:', err);
@@ -84,9 +88,15 @@ function ChatInterface() {
             <h2>Contract Intelligence</h2>
             <p>Ask me about government contract spending</p>
             <div className="example-queries">
-              <button className="example-btn" onClick={() => setInputValue('Show me rising costs')}>Show me rising costs</button>
-              <button className="example-btn" onClick={() => setInputValue('Who dominates consulting?')}>Who dominates consulting?</button>
-              <button className="example-btn" onClick={() => setInputValue('Are rates competitive?')}>Are rates competitive?</button>
+              <button className="example-btn" onClick={() => setInputValue('Show me rising costs')}>
+                Show me rising costs
+              </button>
+              <button className="example-btn" onClick={() => setInputValue('Who dominates consulting?')}>
+                Who dominates consulting?
+              </button>
+              <button className="example-btn" onClick={() => setInputValue('Are rates competitive?')}>
+                Are rates competitive?
+              </button>
             </div>
           </div>
         )}
@@ -125,12 +135,7 @@ function ChatInterface() {
                 <button className="tool-btn" title="Upload file">📎</button>
                 <button className="tool-btn" title="Change mode">⚙️</button>
               </div>
-              <button
-                className="tool-collapse"
-                onClick={() => setShowTools(false)}
-              >
-                ⌃
-              </button>
+              <button className="tool-collapse" onClick={() => setShowTools(false)}>⌃</button>
             </div>
           </div>
         )}
