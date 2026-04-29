@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: contract-intelligence-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+  - type: static
+    name: contract-intelligence-frontend
+    staticPublishPath: build
+    buildCommand: cd frontend && npm install && npm run build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://contract-intelligence-backend.onrender.com
+    routes:
+      - path: /
+        destination: /index.html
