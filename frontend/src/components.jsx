@@ -28,31 +28,29 @@ export function Icon({ name, size = 16 }) {
     search: <><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></>,
     download: <><path d="M12 4v12M6 12l6 6 6-6M4 20h16"/></>,
     filter: <><path d="M4 5h16l-6 8v6l-4-2v-4z"/></>,
-    'arrow-up': <><path d="M12 19V5M5 12l7-7 7 7"/></>,
-    'arrow-down': <><path d="M12 5v14M5 12l7 7 7-7"/></>,
+    info: <><circle cx="12" cy="12" r="9"/><path d="M12 8v.01M12 11v5"/></>,
+    chat: <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/></>,
+    close: <><path d="M18 6L6 18M6 6l12 12"/></>,
+    send: <><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></>,
   }
   return <svg {...p}>{icons[name] || null}</svg>
 }
 
-// ── CountUp (numeric ticker) ──
-export function CountUp({ value, formatter = (v) => Math.round(v).toLocaleString(), duration = 700 }) {
-  const [v, setV] = useState(0)
+// ── useApi hook ──
+export function useApi(path) {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const API = import.meta.env.VITE_API_URL || ''
   useEffect(() => {
-    const start = performance.now()
-    let raf
-    const tick = (now) => {
-      const t = Math.min(1, (now-start)/duration)
-      setV((1-Math.pow(1-t,3)) * value)
-      if (t < 1) raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [value, duration])
-  return formatter(v)
+    if (!path) { setLoading(false); return }
+    setLoading(true)
+    fetch(`${API}${path}`).then(r=>r.json()).then(d=>{setData(d);setLoading(false)}).catch(()=>setLoading(false))
+  }, [path, API])
+  return { data, loading }
 }
 
 // ── Sparkline ──
-export function Sparkline({ data, width=220, height=56, accent='var(--accent)', showDots=false, valueKey='value', labelKey='label' }) {
+export function Sparkline({ data, width=220, height=56, accent='var(--gc-blue)', showDots=false, valueKey='value', labelKey='label' }) {
   const ref = useRef(null)
   const [hover, setHover] = useState(null)
   if (!data || data.length < 2) return null
@@ -89,14 +87,124 @@ export function Sparkline({ data, width=220, height=56, accent='var(--accent)', 
   )
 }
 
-// ── useApi hook ──
-export function useApi(path) {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const API = import.meta.env.VITE_API_URL || ''
-  useEffect(() => {
-    setLoading(true)
-    fetch(`${API}${path}`).then(r=>r.json()).then(d=>{setData(d);setLoading(false)}).catch(()=>setLoading(false))
-  }, [path, API])
-  return { data, loading }
+// ── BarChart (GoC styled) ──
+export function BarChart({ data, height = 200, formatter = fmtCAD }) {
+  if (!data || data.length === 0) return null
+  const max = Math.max(...data.map(d => d.value))
+  const barW = Math.min(36, Math.max(12, (600 - data.length * 4) / data.length))
+  const totalW = data.length * (barW + 4) + 60
+  return (
+    <svg viewBox={`0 0 ${totalW} ${height}`} style={{ width: '100%', height, display: 'block' }}>
+      {[0, 0.25, 0.5, 0.75, 1].map(t => {
+        const yy = 12 + t * (height - 36)
+        const v = max * (1 - t)
+        return (<g key={t}><line x1={52} x2={totalW - 8} y1={yy} y2={yy} stroke="var(--hairline)" strokeWidth="1"/>
+          <text x={48} y={yy + 4} fontSize="10" textAnchor="end" fill="var(--text-tertiary)" fontFamily="var(--font-mono)">{formatter(v)}</text></g>)
+      })}
+      {data.map((d, i) => {
+        const barH = (d.value / max) * (height - 40)
+        const xx = 56 + i * (barW + 4)
+        return (<g key={i}>
+          <rect x={xx} y={height - 24 - barH} width={barW} height={barH} fill="var(--gc-blue)" rx="1"/>
+          <text x={xx + barW / 2} y={height - 10} fontSize="10" textAnchor="middle" fill="var(--text-tertiary)" fontFamily="var(--font-mono)">{d.label}</text>
+        </g>)
+      })}
+    </svg>
+  )
+}
+
+// ── DonutChart ──
+export function DonutChart({ slices, size = 130 }) {
+  if (!slices || slices.length === 0) return null
+  const colors = ['var(--viz-1)','var(--viz-2)','var(--viz-3)','var(--viz-4)','var(--viz-5)','var(--viz-6)']
+  const cx = size / 2, cy = size / 2, r = size * 0.38, innerR = size * 0.22
+  let cumAngle = -Math.PI / 2
+  const total = slices.reduce((s, sl) => s + sl.value, 0)
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      {slices.map((sl, i) => {
+        const angle = (sl.value / total) * Math.PI * 2
+        const x1 = cx + r * Math.cos(cumAngle)
+        const y1 = cy + r * Math.sin(cumAngle)
+        const x2 = cx + r * Math.cos(cumAngle + angle)
+        const y2 = cy + r * Math.sin(cumAngle + angle)
+        const ix1 = cx + innerR * Math.cos(cumAngle + angle)
+        const iy1 = cy + innerR * Math.sin(cumAngle + angle)
+        const ix2 = cx + innerR * Math.cos(cumAngle)
+        const iy2 = cy + innerR * Math.sin(cumAngle)
+        const largeArc = angle > Math.PI ? 1 : 0
+        const d = `M${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} L${ix1},${iy1} A${innerR},${innerR} 0 ${largeArc},0 ${ix2},${iy2} Z`
+        cumAngle += angle
+        return <path key={i} d={d} fill={colors[i % colors.length]}/>
+      })}
+    </svg>
+  )
+}
+
+// ── DecompositionChart ──
+export function DecompositionChart({ rows, height = 200 }) {
+  if (!rows || rows.length < 2) return null
+  const maxV = Math.max(...rows.map(r => (r.volumeContribution || 0) + (r.unitContribution || 0)), 1)
+  const barW = Math.min(36, Math.max(12, (600 - rows.length * 4) / rows.length))
+  const totalW = rows.length * (barW + 4) + 60
+  return (
+    <svg viewBox={`0 0 ${totalW} ${height}`} style={{ width: '100%', height, display: 'block' }}>
+      {rows.map((r, i) => {
+        const volH = ((r.volumeContribution || 0) / maxV) * (height - 40)
+        const unitH = ((r.unitContribution || 0) / maxV) * (height - 40)
+        const xx = 56 + i * (barW + 4)
+        const base = height - 24
+        return (<g key={i}>
+          <rect x={xx} y={base - volH} width={barW} height={volH} fill="var(--viz-2)" rx="1"/>
+          <rect x={xx} y={base - volH - unitH} width={barW} height={unitH} fill="var(--viz-1)" rx="1"/>
+          <text x={xx + barW / 2} y={height - 10} fontSize="10" textAnchor="middle" fill="var(--text-tertiary)" fontFamily="var(--font-mono)">{r.label}</text>
+        </g>)
+      })}
+    </svg>
+  )
+}
+
+// ── Export helpers ──
+export function buildReportHTML(reportTitle, reports) {
+  const today = new Date().toISOString().slice(0, 10)
+  const css = `body{font-family:"Lato","Helvetica Neue",Arial,sans-serif;color:#333;margin:40px;font-size:12px;line-height:1.5;}
+h1{font-size:22px;border-bottom:3px solid #af3c43;padding-bottom:8px;margin:0 0 4px;}
+h2{font-size:16px;color:#284162;margin:24px 0 8px;border-bottom:1px solid #cdcdcd;padding-bottom:4px;}
+h3{font-size:13px;color:#284162;margin:14px 0 6px;}
+.meta{color:#6f6f6f;font-size:11px;margin-bottom:8px;}
+table{border-collapse:collapse;width:100%;margin-bottom:10px;font-size:11px;}
+th{background:#284162;color:white;text-align:left;padding:6px 8px;font-weight:700;}
+td{padding:5px 8px;border-bottom:1px solid #e5e5e5;}
+tr:nth-child(even) td{background:#f8f8f8;}
+.kv{display:grid;grid-template-columns:200px 1fr;gap:4px 14px;font-size:12px;margin-bottom:8px;}
+.kv .k{color:#555;font-weight:600;} .kv .v{font-variant-numeric:tabular-nums;}
+.footer{margin-top:30px;border-top:2px solid #af3c43;padding-top:8px;color:#6f6f6f;font-size:10px;}
+.gc-mark{font-weight:700;color:#1a1a1a;} .num{text-align:right;font-variant-numeric:tabular-nums;}`
+  const sectionHTML = (s) => {
+    let html = `<h3>${s.heading}</h3>`
+    if (s.columns) {
+      html += `<table><thead><tr>${s.columns.map((c, i) => `<th class="${i>0?'num':''}">${c}</th>`).join("")}</tr></thead><tbody>`
+      html += s.rows.map(r => `<tr>${r.map((cell, i) => `<td class="${i>0?'num':''}">${cell}</td>`).join("")}</tr>`).join("")
+      html += `</tbody></table>`
+    } else {
+      html += `<div class="kv">${s.rows.map(([k, v]) => `<div class="k">${k}</div><div class="v">${v}</div>`).join("")}</div>`
+    }
+    return html
+  }
+  const reportsHTML = reports.map(r => `<h2>${r.title}</h2>${(r.sections || []).map(sectionHTML).join("")}`).join("")
+  return `<!doctype html><html><head><meta charset="utf-8"/><title>${reportTitle}</title><style>${css}</style></head>
+<body><h1><span class="gc-mark">Government of Canada</span> · Contract Intelligence</h1>
+<div class="meta">${reportTitle} · Generated ${today} · Source: Open Government — Contracts over $10,000 (CKAN)</div>
+${reportsHTML}
+<div class="footer">Contract Intelligence Dashboard — Government of Canada · Data: open.canada.ca</div>
+</body></html>`
+}
+
+export function downloadHTML(filename, html) {
+  const blob = new Blob([html], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = filename
+  document.body.appendChild(a); a.click(); document.body.removeChild(a)
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }

@@ -1,91 +1,86 @@
-import { useState } from 'react'
-import { fmtCAD, Icon, useApi } from '../components'
+import { fmtCAD, fmtNum, fmtPct, Icon, useApi } from '../components'
+import CanadaMap from '../components/CanadaMap'
 
-const PROV_RECTS = {
-  YT:{x:30,y:60,w:60,h:60}, NT:{x:95,y:60,w:80,h:60}, NU:{x:180,y:30,w:90,h:90},
-  BC:{x:30,y:125,w:70,h:80}, AB:{x:105,y:130,w:55,h:75}, SK:{x:165,y:130,w:50,h:75},
-  MB:{x:220,y:130,w:55,h:75}, ON:{x:280,y:145,w:80,h:65}, QC:{x:365,y:90,w:80,h:100},
-  NB:{x:410,y:195,w:32,h:30}, NS:{x:445,y:200,w:38,h:28}, PE:{x:445,y:185,w:18,h:12}, NL:{x:450,y:90,w:55,h:90},
-}
+export default function MapView({ onJumpTo, registerExport, fyFrom, fyTo, fyQuery }) {
+  const { data: geo } = useApi(`/api/geography?${fyQuery}`)
+  const { data: depts } = useApi(`/api/departments?${fyQuery}`)
 
-export default function MapView() {
-  const { data: depts } = useApi('/api/departments')
-  const { data: geo } = useApi('/api/geography')
-  const [hover, setHover] = useState(null)
+  if (!geo) return <div style={{ padding: 40, color: 'var(--text-tertiary)' }}>Loading…</div>
 
-  if (!depts || !geo) return <div style={{padding:40,color:'var(--text-tertiary)'}}>Loading…</div>
+  const totalSpend = geo.reduce((s, r) => s + r.spend, 0)
+  const totalContracts = geo.reduce((s, r) => s + r.contracts, 0)
+  const topProv = geo[0]
 
   return (
-    <div className="tab-fade" style={{display:'flex',flexDirection:'column',gap:22}}>
+    <div className="tab-fade" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="page-head">
-        <div className="page-eyebrow">Geography · spend by department</div>
-        <div className="page-title">Where the dollars land</div>
-        <div className="page-sub">Spend distributed by awarding department. Ontario and Quebec dominate by virtue of headquarters concentration.</div>
+        <div className="page-eyebrow">Geography · regional analysis</div>
+        <h1 className="page-title">Spending by province / territory</h1>
       </div>
 
-      <div className="grid-2-1">
+      {/* Insight */}
+      {topProv && (
+        <div className="insight">
+          <div className="insight-icon"><Icon name="map" size={18}/></div>
+          <div className="insight-text">
+            <b>{topProv.name}</b> accounts for <b>{fmtPct(topProv.spend / totalSpend)}</b> of all procurement spend ({fmtCAD(topProv.spend)}).
+            The top 3 provinces hold <b>{fmtPct(geo.slice(0, 3).reduce((s, r) => s + r.spend, 0) / totalSpend)}</b> of all spending.
+          </div>
+        </div>
+      )}
+
+      {/* KPIs */}
+      <div className="kpi-grid">
+        <div className="kpi"><div className="kpi-label">Total mapped spend</div><div className="kpi-value">{fmtCAD(totalSpend)}</div></div>
+        <div className="kpi"><div className="kpi-label">Total contracts</div><div className="kpi-value">{fmtNum(totalContracts)}</div></div>
+        <div className="kpi"><div className="kpi-label">Provinces/territories</div><div className="kpi-value">{geo.length}</div></div>
+        <div className="kpi kpi-warning"><div className="kpi-label">Top province share</div><div className="kpi-value">{topProv ? fmtPct(topProv.spend / totalSpend) : '—'}</div><div className="kpi-meta">{topProv ? topProv.name : ''}</div></div>
+      </div>
+
+      <div className="grid-2">
+        {/* Map */}
         <div className="card">
-          <div className="card-head"><div><div className="card-title">Regional distribution (stylized)</div><div className="card-sub">Vendor postal code analysis</div></div></div>
-          <div className="card-body" style={{position:'relative', display:'flex', flexDirection:'column', gap:10}}>
-            <svg viewBox="0 0 540 240" style={{width:'100%',display:'block'}}>
-              {Object.entries(PROV_RECTS).map(([code, rect]) => {
-                const isHi = hover === code
-                const provData = geo?.find(g => g.prov === code)
-                const hasData = provData && provData.spend > 0
-                // Simple color scale based on ranking
-                let fill = 'var(--bg-inset)'
-                if (hasData) {
-                  const max = Math.max(...(geo||[]).map(g=>g.spend))
-                  const ratio = provData.spend / max
-                  if (ratio > 0.5) fill = 'var(--viz-1)'
-                  else if (ratio > 0.1) fill = 'var(--viz-2)'
-                  else fill = 'var(--viz-4)'
-                }
-                if (isHi) fill = 'var(--accent)'
-                
-                return (
-                  <g key={code} onMouseEnter={()=>setHover(code)} onMouseLeave={()=>setHover(null)}>
-                    <rect x={rect.x} y={rect.y} width={rect.w} height={rect.h} rx="4"
-                      fill={fill} opacity={isHi||!hasData?1:0.85}
-                      stroke={isHi ? 'var(--text)' : 'var(--hairline-strong)'}
-                      strokeWidth={isHi ? 1.5 : 0.8}
-                      style={{transition:'all 200ms ease',cursor:'pointer'}}/>
-                    <text x={rect.x+rect.w/2} y={rect.y+rect.h/2+4} textAnchor="middle" fontSize="11" fontWeight="600"
-                      fill={isHi || fill !== 'var(--bg-inset)' ? 'white' : 'var(--text-tertiary)'} style={{pointerEvents:'none'}}>{code}</text>
-                  </g>
-                )
-              })}
-            </svg>
-            <div style={{height: 40, padding: '0 10px'}}>
-              {hover ? (() => {
-                const provData = geo?.find(g => g.prov === hover)
-                return provData ? (
-                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'baseline'}}>
-                    <strong>{hover}</strong>
-                    <span>{fmtCAD(provData.spend)} <span style={{color:'var(--text-tertiary)'}}>({provData.contracts} contracts)</span></span>
-                  </div>
-                ) : <div style={{color:'var(--text-tertiary)'}}>{hover}: No data available</div>
-              })() : <div style={{color:'var(--text-tertiary)'}}>Hover over a region for details</div>}
-            </div>
+          <div className="card-head"><div><div className="card-title">Spend heat map</div><div className="card-sub">Hover for details · darker = higher spend</div></div></div>
+          <div className="card-body">
+            <CanadaMap data={geo} totalSpend={totalSpend}/>
           </div>
         </div>
 
+        {/* Province ranking */}
         <div className="card">
-          <div className="card-head"><div><div className="card-title">By department</div><div className="card-sub">Top spending organizations</div></div></div>
-          <div className="card-body" style={{padding:'10px 18px 16px'}}>
-            {depts.slice(0,10).map(d => {
-              const max = depts[0].spend
-              return (
-                <div key={d.code} className="bar-row">
-                  <div className="bar-label" title={d.name}><span className="mono-tag" style={{marginRight:8}}>{d.code}</span>{d.name}</div>
-                  <div className="bar-track"><div className="bar-fill" style={{width:`${(d.spend/max)*100}%`}}/></div>
-                  <div className="bar-value">{fmtCAD(d.spend)}</div>
-                </div>
-              )
-            })}
+          <div className="card-head"><div><div className="card-title">Provincial ranking</div><div className="card-sub">By total spend</div></div></div>
+          <div className="card-body" style={{ padding: '8px 16px' }}>
+            {geo.map(r => (
+              <div key={r.code} className="bar-row">
+                <div className="bar-label"><b>{r.code}</b> {r.name}</div>
+                <div className="bar-track"><div className="bar-fill" style={{ width: `${(r.spend / geo[0].spend) * 100}%` }}/></div>
+                <div className="bar-value">{fmtCAD(r.spend)}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
+
+      {/* Department spend */}
+      {depts && depts.length > 0 && (
+        <div className="card">
+          <div className="card-head"><div><div className="card-title">Top departments by spend</div></div></div>
+          <table className="tbl">
+            <thead><tr><th>#</th><th>Department</th><th className="num">Spend</th><th className="num">Share</th><th>Bar</th></tr></thead>
+            <tbody>
+              {depts.map((d, i) => (
+                <tr key={d.code}>
+                  <td>{i + 1}</td>
+                  <td><b>{d.name}</b><div className="mono" style={{ marginTop: 2, fontSize: 11 }}>{d.code}</div></td>
+                  <td className="num">{fmtCAD(d.spend)}</td>
+                  <td className="num">{fmtPct(d.spend / totalSpend)}</td>
+                  <td style={{ minWidth: 100 }}><div className="cell-bar-wrap"><div className="cell-bar" style={{ width: `${(d.spend / depts[0].spend) * 100}%` }}/></div></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }

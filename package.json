@@ -1,9 +1,12 @@
 {
   "name": "contract-intelligence",
-  "version": "1.0.0",
-  "description": "Root package.json to trick Render's Node environment into building both frontend and backend",
+  "version": "3.0.0",
+  "description": "Contract Intelligence — Government of Canada procurement analytics (Cloud Run)",
+  "private": true,
   "scripts": {
-    "postinstall": "cd frontend && npm install && npm run build && cd ../backend && python3 -m pip install -r requirements.txt --target ./pypackages --break-system-packages",
-    "start": "cd backend && PYTHONPATH=./pypackages python3 -m uvicorn main:app --host 0.0.0.0 --port $PORT"
+    "frontend:dev": "cd frontend && npm run dev",
+    "frontend:build": "cd frontend && npm install && npm run build",
+    "backend:dev": "cd backend && python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload",
+    "load-data": "cd backend && python bq_loader.py"
   }
 }
