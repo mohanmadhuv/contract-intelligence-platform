@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Icon } from '../components'
 
-const API = import.meta.env.VITE_API_URL || ''
+const API = import.meta.env.VITE_API_URL || 'https://contract-intelligence-platform-mm1o.onrender.com'
 
 const STARTERS = [
   "Which category has the highest amendment ratio?",
