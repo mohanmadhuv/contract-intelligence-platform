@@ -40,14 +40,32 @@ export function Icon({ name, size = 16 }) {
 export function useApi(path) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   // Use backend URL directly - Vite env vars must be set at build time
   const API = 'https://contract-intelligence-platform-mm1o.onrender.com'
   useEffect(() => {
     if (!path) { setLoading(false); return }
     setLoading(true)
-    fetch(`${API}${path}`).then(r=>r.json()).then(d=>{setData(d);setLoading(false)}).catch(()=>setLoading(false))
+    setError(null)
+    console.log('[API] Fetching:', `${API}${path}`)
+    fetch(`${API}${path}`)
+      .then(r => {
+        console.log('[API] Response status:', r.status)
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
+      .then(d => {
+        console.log('[API] Data received:', Object.keys(d).length, 'keys')
+        setData(d)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('[API] Error:', err)
+        setError(err.message)
+        setLoading(false)
+      })
   }, [path, API])
-  return { data, loading }
+  return { data, loading, error }
 }
 
 // ── Sparkline ──

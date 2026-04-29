@@ -1,11 +1,36 @@
 import { fmtCAD, fmtNum, fmtPct, fmtSignedPct, Icon, BarChart, useApi } from '../components'
 
 export default function OverviewView({ onJumpTo, registerExport, fyFrom, fyTo, fyQuery }) {
-  const { data: overview } = useApi(`/api/overview?${fyQuery}`)
-  const { data: trend } = useApi(`/api/topline-trend?${fyQuery}`)
-  const { data: cats } = useApi(`/api/category-summaries?${fyQuery}`)
+  const { data: overview, loading: loadingOverview, error: errorOverview } = useApi(`/api/overview?${fyQuery}`)
+  const { data: trend, loading: loadingTrend, error: errorTrend } = useApi(`/api/topline-trend?${fyQuery}`)
+  const { data: cats, loading: loadingCats, error: errorCats } = useApi(`/api/category-summaries?${fyQuery}`)
 
-  if (!overview || !trend || !cats) return <div style={{ padding: 40, color: 'var(--text-tertiary)' }}>Loading overview…</div>
+  if (errorOverview || errorTrend || errorCats) {
+    return (
+      <div style={{ padding: 40, color: 'var(--critical)' }}>
+        <h3>Error loading data</h3>
+        {errorOverview && <div>Overview: {errorOverview}</div>}
+        {errorTrend && <div>Trend: {errorTrend}</div>}
+        {errorCats && <div>Categories: {errorCats}</div>}
+        <div style={{ marginTop: 20, color: 'var(--text-tertiary)' }}>
+          Check browser console (F12) for details.
+        </div>
+      </div>
+    )
+  }
+
+  if (!overview || !trend || !cats) {
+    return (
+      <div style={{ padding: 40, color: 'var(--text-tertiary)' }}>
+        Loading overview…
+        <div style={{ fontSize: 12, marginTop: 10 }}>
+          {loadingOverview && '⏳ Loading overview data...'}
+          {loadingTrend && '⏳ Loading trend data...'}
+          {loadingCats && '⏳ Loading category data...'}
+        </div>
+      </div>
+    )
+  }
 
   const worst = cats.length > 0 ? cats[0] : null
   const latest = trend[trend.length - 1]
